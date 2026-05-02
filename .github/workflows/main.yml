@@ -1,47 +1,43 @@
 name: Automation CI
 
-on: [push, pull_request] # Запускати при кожному оновленні коду
+on: [push, pull_request]
 
 jobs:
   main-pipeline:
     runs-on: ubuntu-latest
     strategy:
-      # Завдання 3: Мультиверсійне тестування
       matrix:
         python-version: ["3.9", "3.10", "3.11"]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Оновлено до v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Оновлено до v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Завдання 2: Linting (Перевірка стилю)
       - name: Code Quality (Flake8)
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-      # Завдання 1 та 5: Тести та HTML-звіт
       - name: Run Tests & Generate Report
         run: pytest --html=report.html --self-contained-html
 
-      # Збереження звіту як артефакту
       - name: Archive report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # ОСНОВНЕ ВИПРАВЛЕННЯ ТУТ
         with:
-          name: test-report-${{ matrix.python-version }}
+          # v4 вимагає унікальні імена для кожного артефакту в матриці
+          name: test-report-python-${{ matrix.python-version }} 
           path: report.html
 
-  # Завдання 4: Збірка Docker-контейнера
   docker-build:
-    needs: main-pipeline # Запускати тільки якщо тести пройшли
+    needs: main-pipeline
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4 # Оновлено до v4
       - name: Build Image
         run: docker build . -t my-app:latest
